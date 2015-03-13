@@ -50,7 +50,7 @@ void shiftarray(int* a) {
     *(a+INVNUM-1)=-1;
 }
 
-void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int combat) {
+void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat) {
     struct timespec a;
     a.tv_sec  = 0;
     a.tv_nsec = 1000;
@@ -96,7 +96,7 @@ void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future
     } else {
         if (r==1) printf("Heads! You can take the treasure!\nHebrac disappears!\n");
         else printf("Tails! You can take the treasure!\nHebrac disappears!\n");
-        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,0,combat);
+        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,stat,combat);
     }
 }
 
@@ -283,10 +283,6 @@ void removeleast(int* hpmax, int* hpnow, int* aces, int* inv) {
         }
     }
     int p=leastvalueinv(inv);
-    if (p<=0) {
-        ("'I can't take anything from you!'\nThe black priestess disappears!\n");
-        return;
-    }
     char s[20];
     nameitem(s,*(inv+p));
     printf("'I'm sorry, but I have to take your %s.'\nThe black priestess disappears!\n",s);
@@ -478,7 +474,7 @@ void treasure(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
         scanf("%d",&n);
         if (n==0) return;
     }
-    if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,combat);
+    if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,0,combat);
     else if (r%13==12) {
         if (rec==0) genie(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,combat);
         else printf("An empty lantern...");
@@ -998,7 +994,7 @@ void room(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, 
         return;
     }
     if (r<0) return;
-    if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,0);
+    if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
     else if (r%13==12) merchant(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag);
     else if (r%13==11) {
         if (r>=25) blackqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0);
@@ -1075,14 +1071,14 @@ void movement(int* future, int* map, int* loot, int* vision, int* pos, int* floo
         if (e>=0) {
             *pos=e;
             *start=1;
-            *(vision+*pos)=1;
+            if (*(vision+*pos)==0) *(vision+*pos)=1;
             return;
         } else {
             *floor=*floor+1;
             *antimag=0;
             *checkcurse=0;
             genmap(future,map,loot,vision);
-            *(vision+*pos)=1;
+            if (*(vision+*pos)==0) *(vision+*pos)=1;
             *start=1;
             return;
         }
@@ -1098,25 +1094,25 @@ void movement(int* future, int* map, int* loot, int* vision, int* pos, int* floo
     if ((e==1)&&(pos-4>=0)) {
         *pos=*pos-4;
         *start=1;
-        *(vision+*pos)=1;
+        if (*(vision+*pos)==0) *(vision+*pos)=1;
         return;
     }
     if ((e==4)&&(*pos%4)) {
         *pos=*pos-1;
         *start=1;
-        *(vision+*pos)=1;
+        if (*(vision+*pos)==0) *(vision+*pos)=1;
         return;
     }
     if ((e==6)&&(*(pos)%4!=3)) {
         *pos=*pos+1;
         *start=1;
-        *(vision+*pos)=1;
+        if (*(vision+*pos)==0) *(vision+*pos)=1;
         return;
     }
     if ((e==8)&&(*pos+4<12)) {
         *pos=*pos+4;
         *start=1;
-        *(vision+*pos)=1;
+        if (*(vision+*pos)==0) *(vision+*pos)=1;
         return;
     }
     if ((e==-1)&&(*(map+*pos)==-1)) {
@@ -1125,7 +1121,7 @@ void movement(int* future, int* map, int* loot, int* vision, int* pos, int* floo
         *checkcurse=0;
         genmap(future,map,loot,vision);
         *start=1;
-        *(vision+*pos)=1;
+        if (*(vision+*pos)==0) *(vision+*pos)=1;
         return;
     }
     printf("That's not an available direction!\n");
@@ -1148,10 +1144,10 @@ void useitem(int* hpmax, int* hpnow, int* inv) {
         return;
     }
     *hpnow=min(*hpmax,*hpnow+1+*(inv+k));
-    *(inv+k)=0;
     char s[20];
     nameitem(s,*(inv+k));
     printf("You use %s!\n",s);
+    *(inv+k)=0;
 }
 
 void genstairs(int* map, int* pos) {
@@ -1673,7 +1669,7 @@ void printmap(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* map,
         printf(" ");
     }
     printf("\nCompanions: %d\tInventory: ",numslav(slave));
-    for (i=0; i<12; i++) {
+    for (i=0; i<INVNUM; i++) {
         if (*(inv+i)==0) printf("E");
         else {
             printf("%d",*(inv+i)%13+1);
@@ -1689,10 +1685,12 @@ void printmap(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* map,
 //una funzione per salvare?
 
 //ora bisogna capire dove e quando far aggiornare la mappa o ulteriori interfacce
-
 //fare una specie di stream di tot righe fissate dopo la mappa, e aggiornare più spesso
 
 //perchè diamine slave è un array e non un int qualsiasi???
+
+//bug scanf:
+//http://stackoverflow.com/questions/18584302/accept-numerical-values-only-for-input-using-scanf
 
 int main(){
     struct timespec a;
@@ -1702,12 +1700,16 @@ int main(){
     struct timeval t1;
     gettimeofday(&t1, NULL);
     srand(t1.tv_usec * t1.tv_sec);
-    printf("Welcome to Hebrac's Dungeon! ATM only the vanilla play is available :(\n");
+    printf("\t\t\t\tWelcome to\n");
+    printf("\t\t╦ ╦┌─┐┌┐ ┬─┐┌─┐┌─┐'┌─┐  ╔╦╗┬ ┬┌┐┌┌─┐┌─┐┌─┐┌┐┌\n");
+    printf("\t\t╠═╣├┤ ├┴┐├┬┘├─┤│   └─┐   ║║│ │││││ ┬├┤ │ ││││\n");
+    printf("\t\t╩ ╩└─┘└─┘┴└─┴ ┴└─┘ └─┘  ═╩╝└─┘┘└┘└─┘└─┘└─┘┘└┘\n");
+    printf("ATM only the vanilla play is available :(\n");
     int hpmax=15, hpnow=15;
     int aces[4]={0,0,0,0};
-    int inv[INVNUM]; //no limitations; dynamic arrays?
-    int slave[INVNUM]; //no limitations; dynamic arrays?
-    int future[INVNUM]; //no limitations; dynamic arrays?
+    int inv[INVNUM]; //no limitations?; dynamic arrays?
+    int slave[INVNUM]; //no limitations?; dynamic arrays?
+    int future[INVNUM]; //no limitations?; dynamic arrays?
     int start;
     for (start=0; start<INVNUM; start++) {
         inv[start]=0;
