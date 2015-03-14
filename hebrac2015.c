@@ -16,6 +16,8 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
+#include <stddef.h>
 
 #define INVNUM 10
 #define DEBUG 1
@@ -34,9 +36,9 @@
 
 //test ifdef
 
-void treasure(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat, FILE* fp);
+void treasure(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat);
 
-void magic(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int combat, int* control, int* contator, int* modenemy, int* datt, int* modatt, int* nomag, char* s, FILE* fp);
+void magic(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int combat, int* control, int* contator, int* modenemy, int* datt, int* modatt, int* nomag, char* s);
 
 int magicconsume(int* aces, int* inv, int cost, char* name);
 
@@ -44,13 +46,28 @@ void stonestatue(int* aces, int* inv, int* map, int times, int combat, int free)
 
 void godvision(int* aces, int* inv, int* vision, int* nomag, int free);
 
+int getint(int *i) {
+    int nope=0;
+    int end;
+    char buffer[100];
+    do {
+        if (nope==1)
+            fputs("Invalid input, try again.\n", stdout);
+        nope=1;
+        if (NULL==fgets(buffer,sizeof(buffer),stdin))
+            return -1;
+        errno=0;
+    } while ((1!=sscanf(buffer,"%d %n",i,&end))||buffer[end]||errno);
+    return 0;
+}
+
 void shiftarray(int* a) {
     int i;
     for (i=0; i<INVNUM-1; i++) *(a+i)=*(a+i+1);
     *(a+INVNUM-1)=-1;
 }
 
-void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat, FILE* fp) {
+void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat) {
     struct timespec a;
     a.tv_sec  = 0;
     a.tv_nsec = 1000;
@@ -68,8 +85,6 @@ void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future
                 i=1;
             } else if (i>0) {
                 printf("'Don't be rude the next time!'\nHebrac disappears!\n");
-                freopen("hebractemp","w+",fp);
-                fprintf(fp,"'Don't be rude the next time!'\nHebrac disappears!\n");
                 *(loot+*pos)=-1;
                 *(vision+*pos)=2;
                 return;
@@ -77,11 +92,8 @@ void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future
         }
     } while ((r!=0)&&(r!=1)&&(r!=2));
     printf("'As you wish...'\n");
-    freopen("hebractemp","w+",fp);
-    fprintf(fp,"'As you wish...'\n");
     if (r==0) {
         printf("Hebrac disappears!\n");
-        fprintf(fp,"Hebrac disappears!\n");
         *(loot+*pos)=-1;
         *(vision+*pos)=2;
         return;
@@ -89,17 +101,14 @@ void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future
     i=rand()%2;
     if (*future>=0) {
         printf("Do you think that your divination skills can surpass my power?\n");
-        fprintf(fp,"Do you think that your divination skills can surpass my power?\n");
         shiftarray(future);
     }
     if (i==0) {
         if (r==1) {
             printf("Tails! You lose 5 HP!\nHebrac disappears!\n");
-            fprintf(fp,"Tails! You lose 5 HP!\nHebrac disappears!\n");
         }
         else {
             printf("Heads! You lose 5 HP!\nHebrac disappears!\n");
-            fprintf(fp,"Heads! You lose 5 HP!\nHebrac disappears!\n");
         }
         *(loot+*pos)=-1;
         *(vision+*pos)=2;
@@ -108,40 +117,33 @@ void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future
     } else {
         if (r==1) {
             printf("Heads! You can take the treasure!\nHebrac disappears!\n");
-            fprintf(fp,"Heads! You can take the treasure!\nHebrac disappears!\n");
         }
         else {
             printf("Tails! You can take the treasure!\nHebrac disappears!\n");
-            fprintf(fp,"Tails! You can take the treasure!\nHebrac disappears!\n");
         }
-        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,stat,combat,fp);
+        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,stat,combat);
     }
 }
 
-void genie(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int r, int combat, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void genie(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int r, int combat) {
     if (r==12) {
         printf("You rub the lantern! From the smoke, a djinn of Life appears!\nYour maximum HP are increased by 2!\n");
-        fprintf(fp,"You rub the lantern! From the smoke, a djinn of Life appears!\nYour maximum HP are increased by 2!\n");
         *hpmax=*hpmax+2;
         return;
     }
     if (r==25) {
         printf("You rub the lantern! From the smoke, a djinn of Luck appears!\nYou find some treasure!\n");
-        fprintf(fp,"You rub the lantern! From the smoke, a djinn of Luck appears!\nYou find some treasure!\n");
-        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat,fp);
-        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat,fp);
-        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat,fp);
+        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat);
+        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat);
+        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat);
         return;
     }
     if (r==38) {
         printf("You rub the lantern! From the smoke, a djinn of Destiny appears!\nNow you know this floor perfectly!\n");
-        fprintf(fp,"You rub the lantern! From the smoke, a djinn of Destiny appears!\nNow you know this floor perfectly!\n");
         godvision(aces,inv,vision,NULL,1);
         return;
     }
     printf("You rub the lantern! From the smoke, a djinn of Death appears!\nYou can choose to kill 3 enemies!\n");
-    fprintf(fp,"You rub the lantern! From the smoke, a djinn of Death appears!\nYou can choose to kill 3 enemies!\n");
     stonestatue(aces,inv,map,3,combat,1);
 }
 
@@ -276,29 +278,25 @@ void nameitem(char* s, int i) {
     if (i<51) sprintf(s,"%d strength potions",i%13+1);
 }
 
-void removeleast(int* hpmax, int* hpnow, int* aces, int* inv, FILE* fp) {
+void removeleast(int* hpmax, int* hpnow, int* aces, int* inv) {
     if (!checkpositiveinv(inv)) {
         if (!checkpositiveace(aces)) {
             printf("'Your bag is empty!'\nThe black priestess disappears!\n");
-            fprintf(fp,"'Your bag is empty!'\nThe black priestess disappears!\n");
             return;
         }
         if (*(aces+3)==1) {
             *(aces+3)=0;
             printf("'I'm sorry, but I have to take your Bracelet of Armok.'\nThe black priestess disappears!\n");
-            fprintf(fp,"'I'm sorry, but I have to take your Bracelet of Armok.'\nThe black priestess disappears!\n");
             return;
         }
         if (*(aces+2)==1) {
             *(aces+2)=0;
             printf("'I'm sorry, but I have to take your Scepter of Leynos.'\nThe black priestess disappears!\n");
-            fprintf(fp,"'I'm sorry, but I have to take your Scepter of Leynos.'\nThe black priestess disappears!\n");
             return;
         }
         if (*(aces)==1) {
             *(aces)=0;
             printf("'I'm sorry, but I have to take your Ruby of Gaza.'\nThe black priestess disappears!\n");
-            fprintf(fp,"'I'm sorry, but I have to take your Ruby of Gaza.'\nThe black priestess disappears!\n");
             *hpmax=*hpmax-5;
             *hpnow=min(*hpmax,*hpnow);
             return;
@@ -306,7 +304,6 @@ void removeleast(int* hpmax, int* hpnow, int* aces, int* inv, FILE* fp) {
         if (*(aces+1)==1) {
             *(aces+1)=0;
             printf("'I'm sorry, but I have to take your Bag of Meres.'\nThe black priestess disappears!\n");
-            fprintf(fp,"'I'm sorry, but I have to take your Bag of Meres.'\nThe black priestess disappears!\n");
             return;
         }
     }
@@ -314,7 +311,6 @@ void removeleast(int* hpmax, int* hpnow, int* aces, int* inv, FILE* fp) {
     char s[20];
     nameitem(s,*(inv+p));
     printf("'I'm sorry, but I have to take your %s.'\nThe black priestess disappears!\n",s);
-    fprintf(fp,"'I'm sorry, but I have to take your %s.'\nThe black priestess disappears!\n",s);
     *(inv+p)=0;
 }
 
@@ -330,18 +326,16 @@ int mostvalueinv(int* inv) {
     return max;
 }
 
-void removemost(int* hpmax, int* hpnow, int* aces, int* inv, FILE* fp) {
+void removemost(int* hpmax, int* hpnow, int* aces, int* inv) {
     if (checkpositiveace(aces)) {
         if (*(aces+1)==1) {
             *(aces+1)=0;
             printf("'Nice, I will take your Bag of Meres.'\nThe black priestess disappears!\n");
-            fprintf(fp,"'Nice, I will take your Bag of Meres.'\nThe black priestess disappears!\n");
             return;
         }
         if (*(aces)==1) {
             *(aces)=0;
             printf("'Nice, I will take your Ruby of Gaza.'\nThe black priestess disappears!\n");
-            fprintf(fp,"'Nice, I will take your Ruby of Gaza.'\nThe black priestess disappears!\n");
             *hpmax=*hpmax-5;
             *hpnow=min(*hpmax,*hpnow);
             return;
@@ -349,80 +343,64 @@ void removemost(int* hpmax, int* hpnow, int* aces, int* inv, FILE* fp) {
         if (*(aces+2)==1) {
             *(aces+2)=0;
             printf("'Nice, I will take your Scepter of Leynos.'\nThe black priestess disappears!\n");
-            fprintf(fp,"'Nice, I will take your Scepter of Leynos.'\nThe black priestess disappears!\n");
             return;
         }
         if (*(aces+3)==1) {
             *(aces+3)=0;
             printf("'Nice, I will take your Bracelet of Armok.'\nThe black priestess disappears!\n");
-            fprintf(fp,"'Nice, I will take your Bracelet of Armok.'\nThe black priestess disappears!\n");
             return;
         }
     }
     if (!checkpositiveinv(inv)) {
         printf("'Damn, your bag is empty!'\nThe black priestess disappears!\n");
-        fprintf(fp,"'Damn, your bag is empty!'\nThe black priestess disappears!\n");
         return;
     }
     int p=mostvalueinv(inv);
     if (p=0) {
         printf("'I can't take anything from you!'\nThe black priestess disappears!\n");
-        fprintf(fp,"'I can't take anything from you!'\nThe black priestess disappears!\n");
         return;
     }
     char s[20];
     nameitem(s,*(inv+p));
     printf("'Not bad, I will take your %s.'\nThe black priestess disappears!\n",s);
-    fprintf(fp,"'Not bad, I will take your %s.'\nThe black priestess disappears!\n",s);
     *(inv+p)=0;
 }
 
-void blackqueen(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int good, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void blackqueen(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int good) {
     printf("It is a black priestess, a kleptomaniac demon!\n");
-    fprintf(fp,"It is a black priestess, a kleptomaniac demon!\n");
     if (*antimag==1) {
         printf("Because the antimagic field, the black magic of the priestess is uneffective!\n");
-        fprintf(fp,"Because the antimagic field, the black magic of the priestess is uneffective!\n");
         return;
     }
     if (good==1) {
         printf("'Because you freed me, I will take your cheapest item with my black magic...'\n");
-        fprintf(fp,"'Because you freed me, I will take your cheapest item with my black magic...'\n");
-        removeleast(hpmax,hpnow,aces,inv,fp);
+        removeleast(hpmax,hpnow,aces,inv);
         return;
     }
     printf("'Ah, I will take something expensive from you!'\n");
-    fprintf(fp,"'Ah, I will take something expensive from you!'\n");
-    removemost(hpmax,hpnow,aces,inv,fp);
-    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
+    removemost(hpmax,hpnow,aces,inv);
+    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
 }
 
-void redqueen(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void redqueen(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat) {
     int i;
     printf("You meet a white priestess, a gentle pixie!\n'Greetings! I want to help you, but you don't have to be greedy. Do you want a gift or you want to be healed?'\n");
-    fprintf(fp,"You meet a white priestess, a gentle pixie!\n'Greetings! I want to help you, but you don't have to be greedy. Do you want a gift or you want to be healed?'\n");
     if (*antimag==1) {
         printf("'Wait! I perceive an antimagic field, so I can't heal you... here a gift, I hope it will be useful...'\n");
-        fprintf(fp,"'Wait! I perceive an antimagic field, so I can't heal you... here a gift, I hope it will be useful...'\n");
-        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,stat,combat,fp);
+        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,stat,combat);
         return;
     } else {
         printf("[0]: Gift\n[1]: Heal\n");
-        fprintf(fp,"[0]: Gift\n[1]: Heal\n");
     }
     do {
         scanf("%d",&i);
         if (i==0) {
             printf("'As you wish, here your gift!'\nThe white priestess disappears!\n");
-            fprintf(fp,"'As you wish, here your gift!'\nThe white priestess disappears!\n");
-            treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,stat,combat,fp);
+            treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,stat,combat);
             return;
         }
         if (i==1) {
             printf("'As you wish, I will heal you!'\nThe white priestess disappears!\n");
-            fprintf(fp,"'As you wish, I will heal you!'\nThe white priestess disappears!\n");
             *hpnow=*hpmax;
             *(loot+*pos)=-1;
             *(vision+*pos)=2;
@@ -433,69 +411,55 @@ void redqueen(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
     } while (i==-1);
 }
 
-void addslave(int* slave, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void addslave(int* slave) {
     printf("A prisoner stands before you.\n'Thanks! Thanks so much! Because you freed me, I will help in a battle!'\n");
-    fprintf(fp,"A prisoner stands before you.\n'Thanks! Thanks so much! Because you freed me, I will help in a battle!'\n");
     int i;
     for (i=0; i<INVNUM; i++) {
         if (*(slave+i)==0) *(slave+i)=1;
         return;
     }
     printf("'...but it seems that your group is too much large and there isn't a place for me.'");
-    fprintf(fp,"'...but it seems that your group is too much large and there isn't a place for me.'");
 }
 
-void addaces(int* hpmax, int* aces, int a, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void addaces(int* hpmax, int* aces, int a) {
     printf("Is this one of the four artifacts?!\n");
-    fprintf(fp,"Is this one of the four artifacts?!\n");
     if (a<9) a=0;
     else if (a<22) a=1;
     else if (a<35) a=2;
     else a=3;
     if (*(aces+a)) {
         printf("It is only a pathetic imitation...\n");
-        fprintf(fp,"It is only a pathetic imitation...\n");
         return;
     }
     *(aces+a)=1;
     if (a==0) {
         printf("You found the Ruby of Gaza!\n");
-        fprintf(fp,"You found the Ruby of Gaza!\n");
         *hpmax=*hpmax+5;
     }
     else if (a==1) {
         printf("You found the Bag of Meres!\n");
-        fprintf(fp,"You found the Bag of Meres!\n");
     }
     else if (a==2) {
         printf("You found the Scepter of Leynos!\n");
-        fprintf(fp,"You found the Scepter of Leynos!\n");
     }
     else {
         printf("You found the Bracelet of Armok!\n");
-        fprintf(fp,"You found the Bracelet of Armok!\n");
     }
 }
 
-void dropinv(int* inv, int r, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void dropinv(int* inv, int r) {
     int i;
     char s[20];
     char t[20];
     nameitem(s,r);
     printf("Your bag is full! Do you want to drop something to keep %s?\n[0]: No\n[1]: Yes\n",s);
-    fprintf(fp,"Your bag is full! Do you want to drop something to keep %s?\n[0]: No\n[1]: Yes\n",s);
     scanf("%d",&i);
     if (i==0) {
         printf("You don't keep the %s.\n",s);
-        fprintf(fp,"You don't keep the %s.\n",s);
     } else {
         i=0;
         do {
             printf("What do you want to drop?\n");
-            fprintf(fp,"What do you want to drop?\n");
             scanf("%d",&i);
             if ((i<0)||(i>=INVNUM)) {
                 printf("You don't have that slot! Insert a number between 0 and %d!\n",INVNUM-1);
@@ -504,11 +468,9 @@ void dropinv(int* inv, int r, FILE* fp) {
                 int k;
                 nameitem(t,*(inv+i));
                 printf("Do you want to drop the %s?\n[0]: No\n[1]: Yes\n",t);
-                fprintf(fp,"Do you want to drop the %s?\n[0]: No\n[1]: Yes\n",t);
                 scanf("%d",&k);
                 if (k==1) {
                     printf("You dropped the %s to keep the %s.\n",s,t);
-                    fprintf(fp,"You dropped the %s to keep the %s.\n",s,t);
                     *(inv+i)=r;
                     i=-1;
                     return;
@@ -519,11 +481,9 @@ void dropinv(int* inv, int r, FILE* fp) {
         } while (i!=-1);
     }
     printf("What do you want to drop?\n");
-    fprintf(fp,"What do you want to drop?\n");
 }
 
-void treasure(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void treasure(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int rec, int stat, int combat) {
     struct timespec a;
     a.tv_sec  = 0;
     a.tv_nsec = 1000;
@@ -542,29 +502,26 @@ void treasure(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
     else r=*(loot+*pos);
     if (r==-1) {
         printf("This room is empty...\n");
-        fprintf(fp,"This room is empty...\n");
         return;
     }
     if (stat==1) {
         printf("Do you want to take the treasure in this room?\n[0]: No\n[1]: Yes\n");
-        fprintf(fp,"Do you want to take the treasure in this room?\n[0]: No\n[1]: Yes\n");
         scanf("%d",&n);
         if (n==0) return;
     }
-    if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,0,combat,fp);
+    if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,0,combat);
     else if (r%13==12) {
-        if (rec==0) genie(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,combat,fp);
+        if (rec==0) genie(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,r,combat);
         else {
             printf("An empty lantern...");
-            fprintf(fp,"An empty lantern...");
         }
     }
     else if (r%13==11) {
-    if (r>=25) blackqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,fp);
-    else redqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,0,combat,fp);
+    if (r>=25) blackqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1);
+    else redqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,0,combat);
     }
-    else if (r%13==10) addslave(slave,fp);
-    else if (r%13==0) addaces(hpmax,aces,r,fp);
+    else if (r%13==10) addslave(slave);
+    else if (r%13==0) addaces(hpmax,aces,r);
     else {
         int n=checkfullinv(inv);
         char s[20];
@@ -572,9 +529,8 @@ void treasure(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
             *(inv+n)=r;
             nameitem(s,r);
             printf("You received %s!\n",s);
-            fprintf(fp,"You received %s!\n",s);
         } else {
-            dropinv(inv,r,fp);
+            dropinv(inv,r);
         }
     }
     if (stat==1) {
@@ -632,8 +588,7 @@ void removeslave(int* slave, int n) {
     }
 }
 
-void goodsoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void goodsoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag) {
     int value=0;
     int k;
     int offitem[INVNUM];
@@ -645,19 +600,15 @@ void goodsoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* fu
     int p=-1;
     do {
         printf("'What do you want to offer? An item or a slave?'\n[0]: Item\n[1]: Slave\n");
-        fprintf(fp,"'What do you want to offer? An item or a slave?'\n[0]: Item\n[1]: Slave\n");
         scanf("%d",&k);
         if (k==0) {
             printf("'What item do you want to offer?'\n");
-            fprintf(fp,"'What item do you want to offer?'\n");
             scanf("%d",&k);
             if ((k<0)||(k>=INVNUM)||(*(inv+k)==0)) {
                 printf("'Are you kidding me? Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
                 scanf("%d",&k);
                 if (k==1) {
                     printf("You aborted the trade.\n");
-                    freopen("hebractemp","w+",fp);
-                    fprintf(fp,"You aborted the trade.\n");
                     return;
                 }
             } else {
@@ -677,55 +628,42 @@ void goodsoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* fu
             scanf("%d",&k);
             if (k==1) {
                 printf("You aborted the trade.\n");
-                freopen("hebractemp","w+",fp);
-                fprintf(fp,"You aborted the trade.\n");
                 return;
             }
         }
         if (value<valueitem(*(loot+*pos))) printf("'My item is valued %d gems and you offer is worth %d gems.'\n",valueitem(*(loot+*pos)),value);
         else {
             printf("'I'm satisfied with your offer of %d slaves and",offslav);
-            fprintf(fp,"'I'm satisfied with your offer of %d slaves and",offslav);
             for (k=0; k<=p; k++) {
                 nameitem(s,offitem[k]);
                 printf(" %s",s);
-                fprintf(fp," %s",s);
                 if (k<p) {
                     printf(",");
-                    fprintf(fp,",");
                 }
                 else {
                     printf(".");
-                    fprintf(fp,".");
                 }
             }
             if (p<0) {
                 printf("nothing else.'\n");
-                fprintf(fp,"nothing else.'\n");
             }
             else {
                 printf(".'\n");
-                fprintf(fp,".'\n");
             }
             k=-1;
             do {
                 printf("'Do you accept the trade?'\n[0]: No\n[1]: Yes\n");
-                fprintf(fp,"'Do you accept the trade?'\n[0]: No\n[1]: Yes\n");
                 scanf("%d",&k);
                 if (k==0) {
                     printf("'Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
                     scanf("%d",&k);
                     if (k==1) {
                         printf("You aborted the trade.\n");
-                        freopen("hebractemp","w+",fp);
-                        fprintf(fp,"You aborted the trade.\n");
                         return;
                     }
                     printf("'Do you want to propose another offer?'\n[0]: No\n[1]: Yes\n");
                     if (k==0) {
                         printf("You aborted the trade.\n");
-                        freopen("hebractemp","w+",fp);
-                        fprintf(fp,"You aborted the trade.\n");
                         return;
                     }
                     for (k=0; k<INVNUM; k++) {
@@ -733,21 +671,19 @@ void goodsoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* fu
                     }
                     offslav=0;
                     p=-1;
-                    freopen("hebractemp","w+",fp);
                 } else if (k==1) {
                     removeslave(slave,offslav);
                     for (k=0; k<=p; k++) {
                         *(inv+offitem[k])=0;
                     }
-                    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
+                    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
                 }
             } while (k<0);
         }
     } while (value<valueitem(*(loot+*pos)));
 }
 
-void gemoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void gemoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag) {
     int value=0;
     int k;
     int offgem[INVNUM];
@@ -758,7 +694,6 @@ void gemoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
     int p=-1;
     do {
         printf("'What gem do you want to offer?'\n");
-        fprintf(fp,"'What gem do you want to offer?'\n");
         scanf("%d",&k);
         if ((k<0)||(k>=INVNUM)||(*(inv+k)==0)) {
             printf("'Are you kidding me? Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
@@ -769,8 +704,6 @@ void gemoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
             scanf("%d",&k);
             if (k==1) {
                 printf("You aborted the trade.\n");
-                freopen("hebractemp","w+",fp);
-                fprintf(fp,"You aborted the trade.\n");
                 return;
             }
         } else {
@@ -781,49 +714,39 @@ void gemoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
         if (value<valueitem(*(loot+*pos))) printf("'My item is valued %d gems and you offer is worth %d gems.'\n",valueitem(*(loot+*pos)),value);
         else {
             printf("'I'm satisfied with your offer of %d gems:",value);
-            fprintf(fp,"'I'm satisfied with your offer of %d gems:",value);
             for (k=0; k<=p; k++) {
                 nameitem(s,offgem[k]);
                 if (k==p) {
                     printf(" %s gems.'\n",s);
-                    fprintf(fp," %s gems.'\n",s);
                 } else {
                     printf(" %s gems,",s);
-                    fprintf(fp," %s gems,",s);
                 }
             }
             k=-1;
             do {
                 printf("'Do you accept the trade?'\n[0]: No\n[1]: Yes\n");
-                fprintf(fp,"'Do you accept the trade?'\n[0]: No\n[1]: Yes\n");
                 scanf("%d",&k);
                 if (k==0) {
                     printf("'Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
-                    fprintf(fp,"'Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
                     scanf("%d",&k);
                     if (k==1) {
                         printf("You aborted the trade.\n");
-                        freopen("hebractemp","w+",fp);
-                        fprintf(fp,"You aborted the trade.\n");
                         return;
                     }
                     printf("'Do you want to propose another offer?'\n[0]: No\n[1]: Yes\n");
                     if (k==0) {
                         printf("You aborted the trade.\n");
-                        freopen("hebractemp","w+",fp);
-                        fprintf(fp,"You aborted the trade.\n");
                         return;
                     }
                     for (k=0; k<INVNUM; k++) {
                         offgem[k]=0;
                     }
                     p=-1;
-                    freopen("hebractemp","w+",fp);
                 } else if (k==1) {
                     for (k=0; k<=p; k++) {
                         *(inv+offgem[k])=0;
                     }
-                    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
+                    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
                 }
             } while (k<0);
         }
@@ -839,79 +762,67 @@ int illusion(int* aces, int* inv) {
     return 1;
 }
 
-void stealingspirit(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, char* st, int* control, FILE* fp);
+void stealingspirit(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, char* st, int* control);
 
-void exchange(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int type, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void exchange(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int type) {
     char s[20];
     int i;
     nameitem(s,*(loot+*pos));
     if (*(aces+1)==1) {
         printf("You put out enough gems from your bag of Meres and buy the %s.\n",s);
-        fprintf(fp,"You put out enough gems from your bag of Meres and buy the %s.\n",s);
-        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
+        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
         return;
         }
     if ((type==1)&&(magiccount(aces,inv)>3)) {
         printf("Do you want to use an Illusion spell?\n[0]: No\n[1]: Yes\n");
-        fprintf(fp,"Do you want to use an Illusion spell?\n[0]: No\n[1]: Yes\n");
         scanf("%d",&i);
         if (i==1) i=illusion(aces,inv);
         if (i==1) {
             printf("You give nothing to the adventurer, but you receive the treasure!\n");
-            fprintf(fp,"You give nothing to the adventurer, but you receive the treasure!\n");
-            treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
+            treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
         }
     }
     if (magiccount(aces,inv)>5) {
         printf("Do you want to use a StealingSpirit spell?\n[0]: No\n[1]: Yes\n");
-        fprintf(fp,"Do you want to use a StealingSpirit spell?\n[0]: No\n[1]: Yes\n");
         scanf("%d",&i);
         if (i==1) {
-            stealingspirit(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,NULL,NULL,NULL,fp);
+            stealingspirit(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,NULL,NULL,NULL);
             if (type==0) {
                 printf("The merchant disappears!\n");
-                fprintf(fp,"The merchant disappears!\n");
             }
         }
     }
     if (valueitem(*(loot+*pos))>valueinv(inv,slave)) {
         printf("'You don't have enough goods to trade!'\n");
-        fprintf(fp,"'You don't have enough goods to trade!'\n");
         *(loot+*pos)=-1;
         *(vision+*pos)=2;
         return;
     }
     if ((type==1)&&(valueitem(*(loot+*pos))>gemcount(inv))) {
         printf("'You don't have enough gems to trade!'\n");
-        fprintf(fp,"'You don't have enough gems to trade!'\n");
         *(loot+*pos)=-1;
         *(vision+*pos)=2;
         return;
     }
     if (type==0) {
-        goodsoffer(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,fp);
+        goodsoffer(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag);
         return;
     }
-    gemoffer(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,fp);
+    gemoffer(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag);
 }
 
 
-void trade(int* hpmax, int* hpnow, int* aces, int* inv, int* future, int* slave, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int type, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void trade(int* hpmax, int* hpnow, int* aces, int* inv, int* future, int* slave, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int type) {
     int i;
     if ((type==1)&&(*(loot+*pos)>13)&&(*(loot+*pos)<23)) {
         printf("'I'm sorry, but I have already sold my goods.'\n");
-        fprintf(fp,"'I'm sorry, but I have already sold my goods.'\n");
         if (magiccount(aces,inv)>5) {
             printf("Do you want to use a StealingSpirit spell?\n[0]: No\n[1]: Yes\n");
-            fprintf(fp,"Do you want to use a StealingSpirit spell?\n[0]: No\n[1]: Yes\n");
             scanf("%d",&i);
             if (i==1) {
-                stealingspirit(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,NULL,NULL,NULL,fp);
+                stealingspirit(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,NULL,NULL,NULL);
                 if (type==0) {
                     printf("The merchant disappears!\n");
-                    fprintf(fp,"The merchant disappears!\n");
                 }
             }
         }
@@ -921,14 +832,12 @@ void trade(int* hpmax, int* hpnow, int* aces, int* inv, int* future, int* slave,
     }
     if ((type==0)&&(*(loot+*pos)%13==0)) {
         printf("'I'm sorry, but I don't want to trade my artifact.'\n");
-        fprintf(fp,"'I'm sorry, but I don't want to trade my artifact.'\n");
         *(loot+*pos)=-1;
         *(vision+*pos)=2;
         return;
     }
     if ((*(loot+*pos)%13==11)&&(*(loot+*pos)>25)) {
         printf("'I don't think you are interest in a black priestess...'\n");
-        fprintf(fp,"'I don't think you are interest in a black priestess...'\n");
         *(loot+*pos)=-1;
         *(vision+*pos)=2;
         return;
@@ -937,11 +846,9 @@ void trade(int* hpmax, int* hpnow, int* aces, int* inv, int* future, int* slave,
     nameitem(s,*(loot+*pos));
     do {
         printf("'Are you interested in my %s?'\n",s);
-        fprintf(fp,"'Are you interested in my %s?'\n",s);
         if (*(loot+*pos)%13==0) {
             if (((*(loot+*pos)==0)&&(*aces==1))||((*(loot+*pos)==13)&&(*(aces+1)==1))||((*(loot+*pos)==26)&&(*(aces+2)==1))||((*(loot+*pos)==39)&&(*(aces+3)==1))) {
                 printf("You see it's only a pathetic imitation...\n");
-                fprintf(fp,"You see it's only a pathetic imitation...\n");
                 *(loot+*pos)=-1;
                 *(vision+*pos)=2;
                 return;
@@ -955,7 +862,7 @@ void trade(int* hpmax, int* hpnow, int* aces, int* inv, int* future, int* slave,
             return;
         }
         if (i==1) {
-            exchange(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,type,fp);
+            exchange(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,type);
             *(vision+*pos)=2;
             *(loot+*pos)=-1;
             return;
@@ -1003,66 +910,53 @@ int min(int a, int b) {
     return b;
 }
 
-void useitemcombat(int* hpmax, int* hpnow, int* inv, int* slave, int* bonusnext, int* bonuscomb, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void useitemcombat(int* hpmax, int* hpnow, int* inv, int* slave, int* bonusnext, int* bonuscomb) {
     int k=-1;
     char s[20];
     printf("Do you want to use an item or seek help from a prisoner?\n[0]: Item\n[1]: Prisoner\n");
-    fprintf(fp,"Do you want to use an item or seek help from a prisoner?\n[0]: Item\n[1]: Prisoner\n");
     scanf("%d",&k);
     if (k==0) {
         printf("What item do you want to use?\n");
-        fprintf(fp,"What item do you want to use?\n");
         scanf("%d",&k);
         if ((k<0)||(k>=INVNUM)||(*(inv+k)==0)) {
             printf("Maybe you are a little too much excited for this fight!\n");
-            fprintf(fp,"Maybe you are a little too much excited for this fight!\n");
             return;
         } else if (*(inv+k)<14) {
             if (*hpmax==*hpnow) {
                 printf("Not really useful now...\n");
-                fprintf(fp,"Not really useful now...\n");
                 return;
             }
             nameitem(s,*(inv+k));
             printf("You use %s!\n",s);
-            fprintf(fp,"You use %s!\n",s);
             *hpnow=min(*hpmax,*hpnow+(*(inv+k)%13)+1);
             *(inv+k)=0;
         } else if (*(inv+k)<27) {
             printf("Gems are nice, but not really useful in a fight!\n");
-            fprintf(fp,"Gems are nice, but not really useful in a fight!\n");
             return;
         } else if (*(inv+k)<40) {
             printf("If you want to do magic, maybe you have to cast a spell...\n");
-            fprintf(fp,"If you want to do magic, maybe you have to cast a spell...\n");
             return;
         } else {
             nameitem(s,*(inv+k));
             printf("You use %s!\n",s);
-            fprintf(fp,"You use %s!\n",s);
             *bonusnext=*bonusnext+(*(inv+k)%13)+1;
             *(inv+k)=0;
         }
     } else if (k==1) {
         if (!checkpositiveinv(slave)) {
             printf("There aren't other adventures with you!\n");
-            fprintf(fp,"There aren't other adventures with you!\n");
             return;
         } else {
             *bonuscomb=*bonuscomb+3;
             removeslave(slave,1);
             printf("A prisoner join your fight for his freedom!\n");
-            fprintf(fp,"A prisoner join your fight for his freedom!\n");
         }
     } else {
         printf("Maybe you are a little too much excited for this fight!\n");
-        fprintf(fp,"Maybe you are a little too much excited for this fight!\n");
     }
 }
 
-int combat(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int* nomag, int enemy, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+int combat(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int* nomag, int enemy) {
     char s[10];
     nameenemy(s,enemy);
     int hpenemy=enemy%13+1;
@@ -1072,7 +966,6 @@ int combat(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future,
         hpenemy=hpenemy/2+a;
     }
     printf("An enemy %s appears! It has %d HP!\n",s,hpenemy);
-    fprintf(fp,"An enemy %s appears! It has %d HP!\n",s,hpenemy);
     int e=0;
     int k;
     int control=1;
@@ -1088,25 +981,22 @@ int combat(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future,
     if (*(aces+3)) bonusaces=3;
     do {
         printf("What do you want to do?\n[0]: Attack\n[1]: Magic\n[2]: Items\n");
-        fprintf(fp,"What do you want to do?\n[0]: Attack\n[1]: Magic\n[2]: Items\n");
         scanf("%d",&k);
         if (k==0) {
             k=hit(future)*modatt+bonusnext+bonuscomb+bonusaces;
             hpenemy-=k;
             hpenemy=max(hpenemy,0);
             printf("You strike the %s for %d damage! It has %d HP!\n",s,k,hpenemy);
-            fprintf(fp,"You strike the %s for %d damage! It has %d HP!\n",s,k,hpenemy);
             if (datt==1) {
                 k=hit(future)+bonusnext+bonuscomb+bonusaces;
                 hpenemy-=k;
                 hpenemy=max(hpenemy,0);
                 datt=0;
                 printf("You perform a second attack and strike the %s for %d damage! It has %d HP!\n",s,k,hpenemy);
-                fprintf(fp,"You perform a second attack and strike the %s for %d damage! It has %d HP!\n",s,k,hpenemy);
             }
             if (hpenemy==0) {
                 e=1;
-                treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
+                treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
             }
             else {
                 k=hpenemy*modenemy;
@@ -1114,25 +1004,21 @@ int combat(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future,
                 *hpnow=max(*hpnow,0);
                 if (contator>0) {
                     printf("The %s is paralysed!\n",s);
-                    fprintf(fp,"The %s is paralysed!\n",s);
                 }
                 else if ((*antimag==1)&&(enemy>26)&&(enemy<36)) {
                     printf("The attack of the %s is blocked by the antimagic field!\n",s);
-                    fprintf(fp,"The attack of the %s is blocked by the antimagic field!\n",s);
                 }
                 else {
                     printf("The %s strikes you for %d damage! You have %d HP!\n",s,k,*hpnow);
-                    fprintf(fp,"The %s strikes you for %d damage! You have %d HP!\n",s,k,*hpnow);
                 }
                 if (*hpnow<=0) e=1;
             }
         } else if (k==1) {
-            magic(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,1,&control,&contator,&modenemy,&datt,&modatt,nomag,s,fp);
+            magic(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,1,&control,&contator,&modenemy,&datt,&modatt,nomag,s);
         } else if (k==2) {
-            useitemcombat(hpmax,hpnow,inv,slave,&bonusnext,&bonuscomb,fp);
+            useitemcombat(hpmax,hpnow,inv,slave,&bonusnext,&bonuscomb);
         } else {
             printf("What do you want to do?! It is really an uneasy moment...\n");
-            fprintf(fp,"What do you want to do?! It is really an uneasy moment...\n");
         }
         if (*start==1) e=1;
         if (contator>0) {
@@ -1144,8 +1030,7 @@ int combat(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future,
     return control;
 }
 
-void adventurer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int* nomag, int* control, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void adventurer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int* nomag, int* control) {
     struct timespec a;
     a.tv_sec  = 0;
     a.tv_nsec = 1000;
@@ -1155,46 +1040,37 @@ void adventurer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* fu
     srand(t1.tv_usec * t1.tv_sec);
     int i;
     printf("It's another adventurer! Do you want to battle ");
-    fprintf(fp,"It's another adventurer! Do you want to battle ");
     i=rand()%2;
     if (i==0) {
         printf("her ");
-        fprintf(fp,"her ");
     }
     else {
         printf("him ");
-        fprintf(fp,"him ");
     }
     printf("or you want to trade something?\n");
-    fprintf(fp,"or you want to trade something?\n");
     if (*(loot+*pos)==-1) {
         printf("The adventurer recognise you! You have to fight!\n");
-        fprintf(fp,"The adventurer recognise you! You have to fight!\n");
-        *control=combat(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,10,fp);
+        *control=combat(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,10);
     } else {
         printf("[0]: Battle\n[1]: Trade\n");
-        fprintf(fp,"[0]: Battle\n[1]: Trade\n");
         do {
             scanf("%d",&i);
-            if (i==0) *control=combat(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,10,fp);
-            else if (i==1) trade(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,0,fp);
+            if (i==0) *control=combat(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,10);
+            else if (i==1) trade(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,0);
             else {
                 printf("The adventurer didn't understand your intentions! Do you want to battle or to trade?\n[0]: Battle\n[1]: Trade\n");
-                fprintf(fp,"The adventurer didn't understand your intentions! Do you want to battle or to trade?\n[0]: Battle\n[1]: Trade\n");
                 i=-1;
             }
         } while ((i!=0)&&(i!=1));
     }
 }
 
-void merchant(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, FILE* fp) {
-    freopen("hebractemp","w+",fp);
+void merchant(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag) {
     printf("A strange merchant is before you.\n");
-    fprintf(fp,"A strange merchant is before you.\n");
-    trade(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,1,fp);
+    trade(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,1);
 }
-///
-void room(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int* nomag, FILE* fp) {
+
+void room(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int* nomag) {
     int control=1;
     int r=*(map+*pos);
     if (r==-1) {
@@ -1202,18 +1078,18 @@ void room(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, 
         return;
     }
     if (r<0) return;
-    if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
-    else if (r%13==12) merchant(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,fp);
+    if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
+    else if (r%13==12) merchant(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag);
     else if (r%13==11) {
-        if (r>=25) blackqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,fp);
-        else redqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
+        if (r>=25) blackqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0);
+        else redqueen(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
     }
-    else if (r%13==10) adventurer(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,&control,fp);
+    else if (r%13==10) adventurer(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,&control);
     else if (r%13==0) {
         printf("The room is empty... but maybe there is something interesting!\n");
-        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0,fp);
+        treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,0);
     }
-    else control=combat(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,r,fp);
+    else control=combat(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,r);
     if ((control==1)&&(*(map+*pos)>=0)) *(map+*pos)=-2;
 }
 
@@ -1292,11 +1168,21 @@ void movement(int* future, int* map, int* loot, int* vision, int* pos, int* floo
         }
     }
     printf("Where do you want to go?\n[0]: Nowhere\n");
-    if (*pos-4>=0) printf("[1]: North\n");
-    if (*pos%4) printf("[4]: West\n");
-    if (*pos%4!=3) printf("[6]: East\n");
-    if (*pos+4<12) printf("[8]: South\n");
-    if (*(map+*pos)==-1) printf("[-1]: Down\n");
+    if (*pos-4>=0) {
+        printf("[1]: North\n");
+    }
+    if (*pos%4) {
+        printf("[4]: West\n");
+    }
+    if (*pos%4!=3) {
+        printf("[6]: East\n");
+    }
+    if (*pos+4<12) {
+        printf("[8]: South\n");
+    }
+    if (*(map+*pos)==-1) {
+        printf("[-1]: Down\n");
+    }
     scanf("%d",&e);
     if (e==0) return;
     if ((e==1)&&(pos-4>=0)) {
@@ -1562,14 +1448,14 @@ void antimagic(int* aces, int* inv, int* antimag, int* nomag) {
     if (nomag) *nomag=1;
 }
 
-void stealingspirit(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, char* st, int* control, FILE* fp) {
+void stealingspirit(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, char* st, int* control) {
     char s[20];
     memset(s,0,sizeof(s));
     sprintf(s,"StealingSpirit");
     int v=magicconsume(aces,inv,6,s);
     if (v<0) return;
     printf("Before your escape, you steal the %s's property!\n",st);
-    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,1,fp);
+    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,0,1,1);
     *control=0;
     movement(future,map,loot,vision,pos,floor,start,antimag,checkcurse,0);
 }
@@ -1677,18 +1563,18 @@ void curse(int* aces, int* inv, int* checkcurse, int* nomag) {
     if (nomag) *nomag=1;
 }
 
-void genieofluck(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int combat, int* nomag, FILE* fp) {
+void genieofluck(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* antimag, int combat, int* nomag) {
     char s[20];
     memset(s,0,sizeof(s));
     sprintf(s,"GenieofLuck");
     int v=magicconsume(aces,inv,11,s);
     if (v<0) return;
     printf("You evoke a djinn of Luck and he gives you five gift!\n");
-    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat,fp);
-    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat,fp);
-    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat,fp);
-    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat,fp);
-    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat,fp);
+    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat);
+    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat);
+    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat);
+    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat);
+    treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,1,0,combat);
     if (nomag) *nomag=1;
 }
 
@@ -1732,7 +1618,7 @@ void godvision(int* aces, int* inv, int* vision, int* nomag, int free) {
     if (nomag) *nomag=1;
 }
 
-void magic(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int combat, int* control, int* contator, int* modenemy, int* datt, int* modatt, int* nomag, char* s, FILE* fp) {
+void magic(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, int* map, int* loot, int* vision, int* end, int* pos, int* floor, int* start, int* antimag, int* checkcurse, int combat, int* control, int* contator, int* modenemy, int* datt, int* modatt, int* nomag, char* s) {
     int v=magiccount(aces,inv);
     int k;
     if ((nomag)&&(*nomag==1)) {
@@ -1770,13 +1656,13 @@ void magic(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future,
     else if ((k==6)&&(v>=4)&&(combat==1)) doubleattack(aces,inv,datt,nomag);
     else if ((k==7)&&(v>=5)&&(combat==1)) superstrength(aces,inv,modatt,nomag);
     else if ((k==8)&&(v>=5)) antimagic(aces,inv,antimag,nomag);
-    else if ((k==9)&&(v>=6)&&(combat==1)) stealingspirit(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,s,control,fp);
+    else if ((k==9)&&(v>=6)&&(combat==1)) stealingspirit(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,s,control);
     else if ((k==10)&&(v>=7)) bodyswitch(aces,inv,future,map,pos,start,control,nomag);
     else if ((k==11)&&(v>=8)) teleport(aces,inv,future,map,loot,vision,pos,floor,start,control,antimag,checkcurse,combat);
     else if ((k==12)&&(v>=9)) revelation(aces,inv,vision,nomag);
     else if ((k==13)&&(v>=9)) hellbomb(aces,inv,map,pos,combat,start,nomag);
     else if ((k==14)&&(v>=10)) curse(aces,inv,checkcurse,nomag);
-    else if ((k==15)&&(v>=11)) genieofluck(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,combat,nomag,fp);
+    else if ((k==15)&&(v>=11)) genieofluck(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,combat,nomag);
     else if ((k==16)&&(v>=15)) stonestatue(aces,inv,map,6,combat,0);
     else if ((k==17)&&(v>=15)) godvision(aces,inv,vision,nomag,0);
     else printf("You can't do that!\n");
@@ -1901,8 +1787,6 @@ void printmap(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* map,
 //http://stackoverflow.com/questions/18584302/accept-numerical-values-only-for-input-using-scanf
 
 int main(){
-    FILE* fp;
-    fp=fopen("hebractemp","w+");
     struct timespec a;
     a.tv_sec  = 0;
     a.tv_nsec = 1000;
@@ -1950,7 +1834,7 @@ int main(){
         if (start==1) {
             printmap(&hpmax,&hpnow,aces,inv,slave,map,loot,vision,&pos);
             start=0;
-            room(&hpmax,&hpnow,aces,inv,slave,future,map,loot,vision,&end,&pos,&floor,&start,&antimag,&checkcurse,&nomag,fp);
+            room(&hpmax,&hpnow,aces,inv,slave,future,map,loot,vision,&end,&pos,&floor,&start,&antimag,&checkcurse,&nomag);
         }
         end=checkend(&hpnow,aces,k);
         if ((end==0)&&(start==0)) {
@@ -1960,9 +1844,9 @@ int main(){
             if (DEBUG) printf("[4]: EXIT\n");
             scanf("%d",&k);
             if (k==0) movement(future,map,loot,vision,&pos,&floor,&start,&antimag,&checkcurse,0);
-            else if (k==1) magic(&hpmax,&hpnow,aces,inv,slave,future,map,loot,vision,&end,&pos,&floor,&start,&antimag,&checkcurse,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,fp);
+            else if (k==1) magic(&hpmax,&hpnow,aces,inv,slave,future,map,loot,vision,&end,&pos,&floor,&start,&antimag,&checkcurse,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
             else if (k==2) useitem(&hpmax,&hpnow,inv);
-            else if ((k==3)&&(*(loot+pos)>0)) treasure(&hpmax,&hpnow,aces,inv,slave,future,map,loot,vision,&end,&pos,&antimag,0,1,0,fp);
+            else if ((k==3)&&(*(loot+pos)>0)) treasure(&hpmax,&hpnow,aces,inv,slave,future,map,loot,vision,&end,&pos,&antimag,0,1,0);
             else if ((k==4)&&(DEBUG)) justadebugend(&end);
             else printf("What?\n");
         }
@@ -1971,6 +1855,4 @@ int main(){
     if (DEBUG) exitstatus(hpmax,hpnow,aces,inv,slave,map,loot,pos);
     if (end==1) printf("You win! Maybe I will find a better endscreen :P\n");
     else printf("You lose!\n");
-    remove("hebractemp");
-    fclose(fp);
 }
