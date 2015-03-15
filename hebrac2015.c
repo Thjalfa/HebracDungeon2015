@@ -78,7 +78,7 @@ void hebrac(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future
     int r,i=0;
     do {
         printf("Hebrac itself is in front of you!\n'Do you want to play? It's a coin flip: you can get some nice treasure or you can get hurt...'\n[0]: Don't play\n[1]: Heads\n[2]: Tails\n");
-        scanf("%d",&r);
+        getint(&r);
         if ((r!=0)&&(r!=1)&&(r!=2)) {
             if (i==0) {
                 printf("'I don't have all the day...'\n");
@@ -393,7 +393,7 @@ void redqueen(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
         printf("[0]: Gift\n[1]: Heal\n");
     }
     do {
-        scanf("%d",&i);
+        getint(&i);
         if (i==0) {
             printf("'As you wish, here your gift!'\nThe white priestess disappears!\n");
             treasure(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,stat,combat);
@@ -453,14 +453,14 @@ void dropinv(int* inv, int r) {
     char t[20];
     nameitem(s,r);
     printf("Your bag is full! Do you want to drop something to keep %s?\n[0]: No\n[1]: Yes\n",s);
-    scanf("%d",&i);
+    getint(&i);
     if (i==0) {
         printf("You don't keep the %s.\n",s);
     } else {
         i=0;
         do {
             printf("What do you want to drop?\n");
-            scanf("%d",&i);
+            getint(&i);
             if ((i<0)||(i>=INVNUM)) {
                 printf("You don't have that slot! Insert a number between 0 and %d!\n",INVNUM-1);
                 i=0;
@@ -468,7 +468,7 @@ void dropinv(int* inv, int r) {
                 int k;
                 nameitem(t,*(inv+i));
                 printf("Do you want to drop the %s?\n[0]: No\n[1]: Yes\n",t);
-                scanf("%d",&k);
+                getint(&k);
                 if (k==1) {
                     printf("You dropped the %s to keep the %s.\n",s,t);
                     *(inv+i)=r;
@@ -506,7 +506,7 @@ void treasure(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
     }
     if (stat==1) {
         printf("Do you want to take the treasure in this room?\n[0]: No\n[1]: Yes\n");
-        scanf("%d",&n);
+        getint(&n);
         if (n==0) return;
     }
     if (r>=52) hebrac(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,antimag,rec,0,combat);
@@ -600,13 +600,13 @@ void goodsoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* fu
     int p=-1;
     do {
         printf("'What do you want to offer? An item or a slave?'\n[0]: Item\n[1]: Slave\n");
-        scanf("%d",&k);
+        getint(&k);
         if (k==0) {
             printf("'What item do you want to offer?'\n");
-            scanf("%d",&k);
+            getint(&k);
             if ((k<0)||(k>=INVNUM)||(*(inv+k)==0)) {
                 printf("'Are you kidding me? Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
-                scanf("%d",&k);
+                getint(&k);
                 if (k==1) {
                     printf("You aborted the trade.\n");
                     return;
@@ -625,7 +625,7 @@ void goodsoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* fu
             }
         } else {
             printf("'Are you kidding me? Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
-            scanf("%d",&k);
+            getint(&k);
             if (k==1) {
                 printf("You aborted the trade.\n");
                 return;
@@ -653,10 +653,10 @@ void goodsoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* fu
             k=-1;
             do {
                 printf("'Do you accept the trade?'\n[0]: No\n[1]: Yes\n");
-                scanf("%d",&k);
+                getint(&k);
                 if (k==0) {
                     printf("'Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
-                    scanf("%d",&k);
+                    getint(&k);
                     if (k==1) {
                         printf("You aborted the trade.\n");
                         return;
@@ -694,14 +694,14 @@ void gemoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
     int p=-1;
     do {
         printf("'What gem do you want to offer?'\n");
-        scanf("%d",&k);
+        getint(&k);
         if ((k<0)||(k>=INVNUM)||(*(inv+k)==0)) {
             printf("'Are you kidding me? Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
-            scanf("%d",&k);
+            getint(&k);
             if (k==1) return;
         } else if ((*(inv+k)>22)||(*(inv+k)<14)) {
             printf("'That's not a gem! Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
-            scanf("%d",&k);
+            getint(&k);
             if (k==1) {
                 printf("You aborted the trade.\n");
                 return;
@@ -725,10 +725,10 @@ void gemoffer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
             k=-1;
             do {
                 printf("'Do you accept the trade?'\n[0]: No\n[1]: Yes\n");
-                scanf("%d",&k);
+                getint(&k);
                 if (k==0) {
                     printf("'Do you want to abort the trade?'\n[0]: No\n[1]: Yes\n");
-                    scanf("%d",&k);
+                    getint(&k);
                     if (k==1) {
                         printf("You aborted the trade.\n");
                         return;
@@ -775,7 +775,7 @@ void exchange(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
         }
     if ((type==1)&&(magiccount(aces,inv)>3)) {
         printf("Do you want to use an Illusion spell?\n[0]: No\n[1]: Yes\n");
-        scanf("%d",&i);
+        getint(&i);
         if (i==1) i=illusion(aces,inv);
         if (i==1) {
             printf("You give nothing to the adventurer, but you receive the treasure!\n");
@@ -784,7 +784,7 @@ void exchange(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* futu
     }
     if (magiccount(aces,inv)>5) {
         printf("Do you want to use a StealingSpirit spell?\n[0]: No\n[1]: Yes\n");
-        scanf("%d",&i);
+        getint(&i);
         if (i==1) {
             stealingspirit(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,NULL,NULL,NULL);
             if (type==0) {
@@ -818,7 +818,7 @@ void trade(int* hpmax, int* hpnow, int* aces, int* inv, int* future, int* slave,
         printf("'I'm sorry, but I have already sold my goods.'\n");
         if (magiccount(aces,inv)>5) {
             printf("Do you want to use a StealingSpirit spell?\n[0]: No\n[1]: Yes\n");
-            scanf("%d",&i);
+            getint(&i);
             if (i==1) {
                 stealingspirit(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,NULL,NULL,NULL);
                 if (type==0) {
@@ -855,7 +855,7 @@ void trade(int* hpmax, int* hpnow, int* aces, int* inv, int* future, int* slave,
             }
         }
         printf("[0]: No\n[1]: Yes\n");
-        scanf("%d",&i);
+        getint(&i);
         if (i==0) {
             *(loot+*pos)=-1;
             *(vision+*pos)=2;
@@ -914,10 +914,10 @@ void useitemcombat(int* hpmax, int* hpnow, int* inv, int* slave, int* bonusnext,
     int k=-1;
     char s[20];
     printf("Do you want to use an item or seek help from a prisoner?\n[0]: Item\n[1]: Prisoner\n");
-    scanf("%d",&k);
+    getint(&k);
     if (k==0) {
         printf("What item do you want to use?\n");
-        scanf("%d",&k);
+        getint(&k);
         if ((k<0)||(k>=INVNUM)||(*(inv+k)==0)) {
             printf("Maybe you are a little too much excited for this fight!\n");
             return;
@@ -981,7 +981,7 @@ int combat(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future,
     if (*(aces+3)) bonusaces=3;
     do {
         printf("What do you want to do?\n[0]: Attack\n[1]: Magic\n[2]: Items\n");
-        scanf("%d",&k);
+        getint(&k);
         if (k==0) {
             k=hit(future)*modatt+bonusnext+bonuscomb+bonusaces;
             hpenemy-=k;
@@ -1054,7 +1054,7 @@ void adventurer(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* fu
     } else {
         printf("[0]: Battle\n[1]: Trade\n");
         do {
-            scanf("%d",&i);
+            getint(&i);
             if (i==0) *control=combat(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,checkcurse,nomag,10);
             else if (i==1) trade(hpmax,hpnow,aces,inv,slave,future,map,loot,vision,end,pos,floor,start,antimag,0);
             else {
@@ -1096,7 +1096,7 @@ void room(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future, 
 void justadebugend(int* end){
     int i;
     printf("JUSTADEBUGEND!: Do you want to exit? [0]: No [1]: Yes\n");
-    scanf("%d",&i);
+    getint(&i);
     if (i==1) *end=1;
 }
 
@@ -1183,7 +1183,7 @@ void movement(int* future, int* map, int* loot, int* vision, int* pos, int* floo
     if (*(map+*pos)==-1) {
         printf("[-1]: Down\n");
     }
-    scanf("%d",&e);
+    getint(&e);
     if (e==0) return;
     if ((e==1)&&(pos-4>=0)) {
         *pos=*pos-4;
@@ -1224,7 +1224,7 @@ void movement(int* future, int* map, int* loot, int* vision, int* pos, int* floo
 void useitem(int* hpmax, int* hpnow, int* inv) {
     int k;
     printf("What item do you want to use?\n");
-    scanf("%d",&k);
+    getint(&k);
     if ((k<0)||(k>=INVNUM)) {
         printf("You don't have that slot! Insert a number between 0 and %d!\n",INVNUM-1);
         return;
@@ -1280,14 +1280,14 @@ int magicconsume(int* aces, int* inv, int cost, char* name) {
     int p=-1;
     do {
         printf("'What magic potion do you want to use?'\n");
-        scanf("%d",&k);
+        getint(&k);
         if ((k<0)||(k>=INVNUM)||(*(inv+k)==0)) {
             printf("Nothing here. Abort the cast?'\n[0]: No\n[1]: Yes\n");
-            scanf("%d",&k);
+            getint(&k);
             if (k==1) return -1;
         } else if ((*(inv+k)>35)||(*(inv+k)<26)) {
             printf("'That's not a magic potion! Abort the cast?'\n[0]: No\n[1]: Yes\n");
-            scanf("%d",&k);
+            getint(&k);
             if (k==1) return -1;
         } else {
             value+=(*(inv+k)%13+1)*a;
@@ -1306,10 +1306,10 @@ int magicconsume(int* aces, int* inv, int cost, char* name) {
             k=-1;
             do {
                 printf("'Do you want to cast %s?'\n[0]: No\n[1]: Yes\n",name);
-                scanf("%d",&k);
+                getint(&k);
                 if (k==0) {
                     printf("'Abort the cast?'\n[0]: No\n[1]: Yes\n");
-                    scanf("%d",&k);
+                    getint(&k);
                     if (k==1) return -1;
                     printf("'Do you want to use different potions?'\n[0]: No\n[1]: Yes\n");
                     if (k==0) return -1;
@@ -1340,7 +1340,7 @@ void remotevision(int* aces, int* inv, int* map, int* nomag) {
         r=-1;
         do {
             printf("You can peek into any chamber. You can do this %d times.\n",v-k);
-            scanf("%d",&r);
+            getint(&r);
             if ((r<0)||(r>11)) r=-1;
             else {
                 if (*(map+r)==-1) printf("There are stairs here.\n");
@@ -1490,7 +1490,7 @@ void bodyswitch(int* aces, int* inv, int* future, int* map, int* pos, int* start
     v=-1;
     do {
         printf("What enemy you want to transmute?\n");
-        scanf("%d",&v);
+        getint(&v);
     } while ((v<0)||(v>11));
     if (*(map+v)>0) {
         int c;
@@ -1596,7 +1596,7 @@ void stonestatue(int*aces, int* inv, int* map, int times, int combat, int free) 
         e=-1;
         do {
             printf("You can turn an enemy in a stone statue. You can do this %d times. What enemy do you want to kill?\n",times-v);
-            scanf("%d",&e);
+            getint(&e);
         } while ((e<0)||(e>11));
         if (*(map+e)>0) *(map+e)=0;
     }
@@ -1646,7 +1646,7 @@ void magic(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* future,
     if (v>=10) printf("[14]: Curse\n");
     if (v>=11) printf("[15]: GenieofLuck\n");
     if (v>=15) printf("[16]: StoneStatue\n[17]: GodVision\n");
-    scanf("%d",&k);
+    getint(&k);
     if (k==0) return;
     if ((k==1)&&(v>=1)) remotevision(aces,inv,map,nomag);
     else if ((k==2)&&(v>=1)) futureperception(aces,inv,future,nomag);
@@ -1783,9 +1783,6 @@ void printmap(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* map,
 
 //perchè diamine slave è un array e non un int qualsiasi???
 
-//bug scanf:
-//http://stackoverflow.com/questions/18584302/accept-numerical-values-only-for-input-using-scanf
-
 int main(){
     struct timespec a;
     a.tv_sec  = 0;
@@ -1798,7 +1795,7 @@ int main(){
     printf("\t\t╦ ╦┌─┐┌┐ ┬─┐┌─┐┌─┐'┌─┐  ╔╦╗┬ ┬┌┐┌┌─┐┌─┐┌─┐┌┐┌\n");
     printf("\t\t╠═╣├┤ ├┴┐├┬┘├─┤│   └─┐   ║║│ │││││ ┬├┤ │ ││││\n");
     printf("\t\t╩ ╩└─┘└─┘┴└─┴ ┴└─┘ └─┘  ═╩╝└─┘┘└┘└─┘└─┘└─┘┘└┘\n");
-    printf("ATM only the vanilla play is available :(\n");
+    printf("\t\t                   VANILLA\n");
     int hpmax=15, hpnow=15;
     int aces[4]={0,0,0,0};
     int inv[INVNUM]; //no limitations?; dynamic arrays?
@@ -1817,7 +1814,7 @@ int main(){
     int k;
     do {
         printf("Where do you want to enter?\n[1]: Northwest\n[3]: Northeast\n[7]: Southwest\n[9]: Southeast\n");
-        scanf("%d",&start);
+        getint(&start);
         if (start==1) pos=0;
         else if (start==3) pos=3;
         else if (start==7) pos=8;
@@ -1842,7 +1839,7 @@ int main(){
             printf("What do you want to do?\n[0]: Movement\n[1]: Magic\n[2]: Item\n");
             if (*(loot+pos)>0) printf("[3]: Treasure\n");
             if (DEBUG) printf("[4]: EXIT\n");
-            scanf("%d",&k);
+            getint(&k);
             if (k==0) movement(future,map,loot,vision,&pos,&floor,&start,&antimag,&checkcurse,0);
             else if (k==1) magic(&hpmax,&hpnow,aces,inv,slave,future,map,loot,vision,&end,&pos,&floor,&start,&antimag,&checkcurse,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
             else if (k==2) useitem(&hpmax,&hpnow,inv);
