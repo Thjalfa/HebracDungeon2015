@@ -1774,14 +1774,13 @@ void printmap(int* hpmax, int* hpnow, int* aces, int* inv, int* slave, int* map,
     printf("\n");
 }
 
-//fare un parser per una migliore gestione dei comandi
+//parser for better input;
 
-//una funzione per salvare?
+//save/load
 
-//ora bisogna capire dove e quando far aggiornare la mappa o ulteriori interfacce
-//fare una specie di stream di tot righe fissate dopo la mappa, e aggiornare più spesso
+//refresh the map more, use a buffer
 
-//perchè diamine slave è un array e non un int qualsiasi???
+//why slace is an array and not a simple int?
 
 int main(){
     struct timespec a;
