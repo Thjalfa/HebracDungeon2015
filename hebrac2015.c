@@ -20,7 +20,7 @@
 #include <stddef.h>
 
 #define INVNUM 10
-#define DEBUG 1
+#define DEBUG 0
 
 #ifdef __APPLE__ && __MACH__ /*MacOSX*/
 #define OS 0
